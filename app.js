@@ -7,24 +7,41 @@ const http = require('http');
 const hostname = '127.0.0.1';
 const port = 3000;
 
-const server = http.createServer((req, res) => {
+// Using express module
+const express = require('express');
+const fs = require('fs');
+
+const app = express();
+app.use(express.static('public'));
+
+app.get('/', (req, res) => {
+  console.log(req.path);
+  fs.readFile('index.html', 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('Error loading the HTML file.');
+      return;
+    }
+
+    res.status(200).send(data);
+  });
+});
+
+app.get('/validate', (req, res) => {
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
 
-  csv().fromFile('./equipment_list.csv').then(
-    async (jsonArray) => {
+  csv()
+    .fromFile('./equipment_list.csv')
+    .then(async (jsonArray) => {
+      let errors = [];
 
-        let errors = [];
+      await vd.validateEquipment(jsonArray, vdm.equipmentMap, errors);
 
-        await vd.validateEquipment(jsonArray, vdm.equipmentMap, errors);
-
-        res.end(JSON.stringify(errors))
-        console.log("Endpoint reached.");
-    } 
-  )
-
+      res.end(JSON.stringify(errors));
+      console.log('Endpoint reached.');
+    });
 });
 
-server.listen(port, hostname, () => {
-  console.log(`Server running at http://${hostname}:${port}/`);
+app.listen(port, () => {
+  console.log(`Server is running on http://localhost:${port}`);
 });
