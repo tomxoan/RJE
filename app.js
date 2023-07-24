@@ -12,6 +12,8 @@ const express = require('express');
 const fs = require('fs');
 
 const app = express();
+const cors = require('cors');
+app.use(cors());
 app.use(express.static('public'));
 
 app.get('/', (req, res) => {
@@ -40,6 +42,22 @@ app.get('/validate', (req, res) => {
       res.end(JSON.stringify(errors));
       console.log('Endpoint reached.');
     });
+});
+
+app.get('/api/validate/:id', (req, res) => {
+  csv()
+    .fromFile('./equipment_list.csv')
+    .then(async (jsonArray) => {
+      let errors = [];
+
+      await vd.validateEquipment(jsonArray, vdm.equipmentMap, errors);
+      const rowId = req.params.id;
+      
+      res.end(JSON.stringify(errors.filter((error) => error.line == rowId)));
+      console.log('Endpoint reached.');
+    });
+  
+  // res.json({ message: `User with ID ${userId} found!` });
 });
 
 app.listen(port, () => {
